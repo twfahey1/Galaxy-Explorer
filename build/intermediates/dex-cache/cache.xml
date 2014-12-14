@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<pre-dex-items>
+
+    <item
+        dex="C:\Users\Tyler\Documents\Fahey App Productions\Galaxy Explorer\android\build\intermediates\pre-dexed\debug\gdx-1.4.1-f60c481348e644ac0120a8dd6a37ae70e6e872f1.jar"
+        jar="C:\Users\Tyler\.gradle\caches\modules-2\files-2.1\com.badlogicgames.gdx\gdx\1.4.1\df470d263438048af74860ca51fc497c16a0c76a\gdx-1.4.1.jar"
+        jumboMode="false"
+        revision="21.1.1"
+        sha1="df470d263438048af74860ca51fc497c16a0c76a"/>
+    <item
+        dex="C:\Users\Tyler\Documents\Fahey App Productions\Galaxy Explorer\android\build\intermediates\pre-dexed\debug\gdx-bullet-1.4.1-dc4fade3d9182a3954a72c6c5c615c00ada70afd.jar"
+        jar="C:\Users\Tyler\.gradle\caches\modules-2\files-2.1\com.badlogicgames.gdx\gdx-bullet\1.4.1\56c37e46d31587ddb74e3c6f8c5d7720fbbfb4ae\gdx-bullet-1.4.1.jar"
+        jumboMode="false"
+        revision="21.1.1"
+        sha1="56c37e46d31587ddb74e3c6f8c5d7720fbbfb4ae"/>
+    <item
+        dex="C:\Users\Tyler\Documents\Fahey App Productions\Galaxy Explorer\android\build\intermediates\pre-dexed\debug\gdx-backend-android-1.4.1-0c18cf875e505ed4226d0d34f96a5ba8a721c427.jar"
+        jar="C:\Users\Tyler\.gradle\caches\modules-2\files-2.1\com.badlogicgames.gdx\gdx-backend-android\1.4.1\eca2621f18b162c03992bd3ecc226e8a477dc6f9\gdx-backend-android-1.4.1.jar"
+        jumboMode="false"
+        revision="21.1.1"
+        sha1="eca2621f18b162c03992bd3ecc226e8a477dc6f9"/>
+    <item
+        dex="C:\Users\Tyler\Documents\Fahey App Productions\Galaxy Explorer\android\build\intermediates\pre-dexed\debug\core-1.0-9b95bde5184acd4e4be475956ee46b2be117e856.jar"
+        jar="C:\Users\Tyler\Documents\Fahey App Productions\Galaxy Explorer\core\build\libs\core-1.0.jar"
+        jumboMode="false"
+        revision="21.1.1"
+        sha1="cb62e810f953ebc91bc0a924654c2480f4b33a97"/>
+    <item
+        dex="C:\Users\Tyler\Documents\Fahey App Productions\Galaxy Explorer\android\build\intermediates\pre-dexed\debug\gdx-ai-1.4.0-26a884cac8d8eb7f5d56523668301feba22e80ee.jar"
+        jar="C:\Users\Tyler\.gradle\caches\modules-2\files-2.1\com.badlogicgames.gdx\gdx-ai\1.4.0\f7532801d6c1526df4a609341fa145acb9e8eb3a\gdx-ai-1.4.0.jar"
+        jumboMode="false"
+        revision="21.1.1"
+        sha1="f7532801d6c1526df4a609341fa145acb9e8eb3a"/>
+    <item
+        dex="C:\Users\Tyler\Documents\Fahey App Productions\Galaxy Explorer\android\build\intermediates\pre-dexed\debug\gdx-box2d-1.4.1-80558142d5d920ba65c353a2322031637a5459fe.jar"
+        jar="C:\Users\Tyler\.gradle\caches\modules-2\files-2.1\com.badlogicgames.gdx\gdx-box2d\1.4.1\9e6453d244896698694a7f3059f15ae509044101\gdx-box2d-1.4.1.jar"
+        jumboMode="false"
+        revision="21.1.1"
+        sha1="9e6453d244896698694a7f3059f15ae509044101"/>
+
+</pre-dex-items>
