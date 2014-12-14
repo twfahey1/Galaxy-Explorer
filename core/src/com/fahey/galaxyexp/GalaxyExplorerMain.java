@@ -624,101 +624,102 @@ public class GalaxyExplorerMain extends InputAdapter implements ApplicationListe
 		visibleCount = 0;
 		//if (space != null) modelBatch.render(space);
 
-		for (final GameObject instance : instances) {
-			if (instances.equals("space")){
-				modelBatch.render(instance);
-			}
-			else if (instance.isVisible(cam)) {
-				modelBatch.render(instance, environment);
-				visibleCount++;
-			}
-		}
 
-		if (Gdx.input.isKeyJustPressed(Input.Keys.EQUALS)){
-			if (activeWeapon < constructors.size) {
-				activeWeapon += 1;
-			} else {
-				activeWeapon = 0;
-			}
-		}
-
-		if (Gdx.input.isKeyJustPressed(Input.Keys.MINUS)){
-			if (activeWeapon > 0){
-				activeWeapon -= 1;
-			} else {
-				activeWeapon = constructors.size;
-			}
-		}
-
-		if (Gdx.input.isKeyPressed(Input.Keys.H)){
-			shipObject.body.applyForce(new Vector3(0f,1f,0f), shipObject.body.getCenterOfMassPosition());
-		}
-		if (Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT)) fire();
-		if (Gdx.input.isKeyPressed(Input.Keys.UP)){
-			shipObject.transform.trn(upVector);
-		}
-		if (Gdx.input.isKeyPressed(Input.Keys.DOWN)){
-			shipObject.transform.trn(downVector);
-
-		}
-		if (Gdx.input.isKeyPressed(Input.Keys.LEFT)){
-			shipObject.transform.translate(leftVector);
-
-		}
-		if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)){
-			shipObject.transform.translate(rightVector);
-
-		}
-		if (Gdx.input.isKeyPressed(Input.Keys.X)) {
-			shipObject.transform.translate(dropDownVector);
-		}
-		if (Gdx.input.isKeyPressed(Input.Keys.Z)) {
-			shipObject.transform.translate(raiseUpVector);
-		}
-		if (Gdx.input.isKeyJustPressed(Input.Keys.COMMA)){
-			shipObject.transform.rotate(rotateVector, 45f);
-			cam.rotateAround(shipObject.center, rotateVector, 45f);
-			cam.update();
-
-		}
-		if (Gdx.input.isKeyPressed(Input.Keys.PERIOD)){
-			shipObject.transform.rotate(rotateVector, -45f);
-			cam.position.rotate(rotateVector, -45f);
-
-		}
-		if (Gdx.input.isKeyPressed(Input.Keys.NUMPAD_8)) {
-			if (shotZ < 50){
-				shotZ += 1;
-			};
-		}
-		if (Gdx.input.isKeyPressed(Input.Keys.NUMPAD_2)) {
-			if (shotZ > -50){
-				shotZ -= 1;
-			};
-		}
-
-		if (Gdx.input.isKeyPressed(Input.Keys.NUMPAD_4)) {
-			if (shotX < 50) {
-				shotX += 1;
-			}
-		}
-		if (Gdx.input.isKeyPressed(Input.Keys.NUMPAD_6)) {
-			if (shotX > -50){
-				shotX -= 1;
-			};
-		}
-		if (Gdx.input.isKeyPressed(Input.Keys.NUMPAD_7)) {
-			if (shotY < 50) {
-				shotY += 1;
-			}
-		}
-		if (Gdx.input.isKeyPressed(Input.Keys.NUMPAD_9)) {
-			if (shotY > -50){
-				shotY -= 1;
-			};
-		}
 
 		if (!loading) {
+			for (final GameObject instance : instances) {
+				if (instances.equals("space")){
+					modelBatch.render(instance);
+				}
+				else if (instance.isVisible(cam)) {
+					modelBatch.render(instance, environment);
+					visibleCount++;
+				}
+			}
+
+			if (Gdx.input.isKeyJustPressed(Input.Keys.EQUALS)){
+				if (activeWeapon < constructors.size) {
+					activeWeapon += 1;
+				} else {
+					activeWeapon = 0;
+				}
+			}
+
+			if (Gdx.input.isKeyJustPressed(Input.Keys.MINUS)){
+				if (activeWeapon > 0){
+					activeWeapon -= 1;
+				} else {
+					activeWeapon = constructors.size;
+				}
+			}
+
+			if (Gdx.input.isKeyPressed(Input.Keys.H)){
+				shipObject.body.applyForce(new Vector3(0f,1f,0f), shipObject.body.getCenterOfMassPosition());
+			}
+			if (Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT)) fire();
+			if (Gdx.input.isKeyPressed(Input.Keys.UP)){
+				shipObject.transform.trn(upVector);
+			}
+			if (Gdx.input.isKeyPressed(Input.Keys.DOWN)){
+				shipObject.transform.trn(downVector);
+
+			}
+			if (Gdx.input.isKeyPressed(Input.Keys.LEFT)){
+				shipObject.transform.translate(leftVector);
+
+			}
+			if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)){
+				shipObject.transform.translate(rightVector);
+
+			}
+			if (Gdx.input.isKeyPressed(Input.Keys.X)) {
+				shipObject.transform.translate(dropDownVector);
+			}
+			if (Gdx.input.isKeyPressed(Input.Keys.Z)) {
+				shipObject.transform.translate(raiseUpVector);
+			}
+			if (Gdx.input.isKeyJustPressed(Input.Keys.COMMA)){
+				shipObject.transform.rotate(rotateVector, 45f);
+				cam.rotateAround(shipObject.center, rotateVector, 45f);
+				cam.update();
+
+			}
+			if (Gdx.input.isKeyPressed(Input.Keys.PERIOD)){
+				shipObject.transform.rotate(rotateVector, -45f);
+				cam.position.rotate(rotateVector, -45f);
+
+			}
+			if (Gdx.input.isKeyPressed(Input.Keys.NUMPAD_8)) {
+				if (shotZ < 50){
+					shotZ += 1;
+				};
+			}
+			if (Gdx.input.isKeyPressed(Input.Keys.NUMPAD_2)) {
+				if (shotZ > -50){
+					shotZ -= 1;
+				};
+			}
+
+			if (Gdx.input.isKeyPressed(Input.Keys.NUMPAD_4)) {
+				if (shotX < 50) {
+					shotX += 1;
+				}
+			}
+			if (Gdx.input.isKeyPressed(Input.Keys.NUMPAD_6)) {
+				if (shotX > -50){
+					shotX -= 1;
+				};
+			}
+			if (Gdx.input.isKeyPressed(Input.Keys.NUMPAD_7)) {
+				if (shotY < 50) {
+					shotY += 1;
+				}
+			}
+			if (Gdx.input.isKeyPressed(Input.Keys.NUMPAD_9)) {
+				if (shotY > -50){
+					shotY -= 1;
+				};
+			}
 			shipObject.body.proceedToTransform(shipObject.transform);
 			shipObject.center.set(shipObject.body.getCenterOfMassPosition());
 			cam.position.set(shipObject.body.getCenterOfMassPosition());
