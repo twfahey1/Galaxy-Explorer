@@ -4,6 +4,7 @@ import com.badlogic.gdx.*;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.*;
+import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -12,17 +13,14 @@ import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
-import com.badlogic.gdx.math.Intersector;
-import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.math.Matrix4;
-import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.math.*;
 import com.badlogic.gdx.math.collision.BoundingBox;
 import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.physics.bullet.Bullet;
 import com.badlogic.gdx.physics.bullet.collision.*;
 import com.badlogic.gdx.physics.bullet.dynamics.*;
 import com.badlogic.gdx.physics.bullet.linearmath.btMotionState;
-import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.*;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.utils.*;
 import com.badlogic.gdx.utils.StringBuilder;
@@ -38,6 +36,9 @@ public class GalaxyExplorerMain extends InputAdapter implements ApplicationListe
 	public Vector3 dropDownVector, raiseUpVector;
 	public Vector3 rotateVector;
 	public int activeWeapon;
+	InputMultiplexer inputMultiplexer;
+
+	public Vector2 touchPos;
 
 	public interface Shape{
 		public abstract boolean isVisible(Matrix4 transform, Camera cam);
@@ -312,6 +313,7 @@ public class GalaxyExplorerMain extends InputAdapter implements ApplicationListe
 	protected Array<GameObject> instances = new Array<GameObject>();
 	protected Array<GameObject> blocks = new Array<GameObject>();
 	protected Array<GameObject> invaders = new Array<GameObject>();
+	protected Array<GameObject> environmentInstances = new Array<GameObject>();
 	protected Environment environment;
 	protected boolean loading;
 	
@@ -351,32 +353,55 @@ public class GalaxyExplorerMain extends InputAdapter implements ApplicationListe
 	static Sound cannonSound;
 	static Sound clinkSound;
 	Array<Sound> soundArray = new Array<Sound>();
-	Sprite fireSprite;
-	Sprite spawnSprite;
+
 	Sprite xUp, xDown, yUp, yDown, zUp, zDown;
+	Sprite sUp, sDown, sLeft, sRight, sAscent, sDescent;
 	Texture fireButton;
 	Texture spawnButton, xUpButton, xDownButton, yUpButton, yDownButton, zUpButton,zDownButton;
+	Texture upButton, downButton, leftButton, rightButton, ascentButton, descentButton;
+
 	SpriteBatch spriteBatch;
 	Array<Sprite> spriteArray;
 
 	GameObject shipObject;
+	GameObject invader1object;
 
+	Actor fireButtonactor;
+	Actor spawnButtonactor;
+	Actor shipUpButtonactor;
+	Actor shipDownButtonactor;
+	Actor shipLeftButtonactor;
+	Actor shipRightButtonactor;
+
+	float touchedActor = 0;
+	String touchedName = "";
 
 	@Override
 	public void create() {
 		Bullet.init();
 
+		touchPos = new Vector2();
 		activeWeapon = 1;
 		spriteBatch = new SpriteBatch();
 		spriteArray = new Array<Sprite>();
 		fireButton = new Texture(Gdx.files.internal("fireButton.png"));
+
 		spawnButton = new Texture(Gdx.files.internal("spawnButton.png"));
+
 		xUpButton = new Texture(Gdx.files.internal("xplusButton.png"));
 		xDownButton = new Texture(Gdx.files.internal("xminusButton.png"));
 		zUpButton = new Texture(Gdx.files.internal("zplusButton.png"));
 		zDownButton = new Texture(Gdx.files.internal("zminusButton.png"));
 		yUpButton = new Texture(Gdx.files.internal("yplusButton.png"));
 		yDownButton = new Texture(Gdx.files.internal("yminusButton.png"));
+		
+		upButton = new Texture(Gdx.files.internal("uparrow.png"));
+		downButton = new Texture(Gdx.files.internal("downarrow.png"));
+		leftButton = new Texture(Gdx.files.internal("leftarrow.png"));
+		rightButton = new Texture(Gdx.files.internal("rightarrow.png"));
+
+		ascentButton = new Texture(Gdx.files.internal("ascent.png"));
+		descentButton = new Texture(Gdx.files.internal("descent.png"));
 
 		moving = false;
 
@@ -388,8 +413,6 @@ public class GalaxyExplorerMain extends InputAdapter implements ApplicationListe
 		raiseUpVector = new Vector3(0f, 1f, 0f);
 		rotateVector = new Vector3(0f, 1f, 0f);
 
-		fireSprite = new Sprite(fireButton);
-		spawnSprite = new Sprite(spawnButton);
 		xUp = new Sprite(xUpButton);
 		xDown = new Sprite(xDownButton);
 		yUp = new Sprite(yUpButton);
@@ -397,16 +420,36 @@ public class GalaxyExplorerMain extends InputAdapter implements ApplicationListe
 		zUp = new Sprite(zUpButton);
 		zDown = new Sprite(zDownButton);
 
-		spriteArray.add(fireSprite);
-		spriteArray.add(spawnSprite);
+		sUp = new Sprite(upButton);
+		sDown = new Sprite(downButton);
+		sLeft = new Sprite(leftButton);
+		sRight = new Sprite(rightButton);
+		sAscent = new Sprite(ascentButton);
+		sDescent = new Sprite(descentButton);
+
 		spriteArray.add(xUp);
 		spriteArray.add(xDown);
 		spriteArray.add(yDown);
 		spriteArray.add(yUp);
 		spriteArray.add(zDown);
 		spriteArray.add(zUp);
+		spriteArray.add(sDown);
+		spriteArray.add(sLeft);
+		spriteArray.add(sRight);
+		spriteArray.add(sAscent);
+		spriteArray.add(sDescent);
+		spriteArray.add(sUp);
+		spriteArray.add(sDown);
+		spriteArray.add(sLeft);
+		spriteArray.add(sRight);
+		spriteArray.add(sDescent);
+		spriteArray.add(sAscent);
 
-		for (Sprite i : spriteArray) scaleSprite(i);
+		for (Sprite i : spriteArray) {
+
+			scaleSprite(i);
+
+		}
 
 		screenH = Gdx.graphics.getHeight();
 		screenW = Gdx.graphics.getWidth();
@@ -416,16 +459,43 @@ public class GalaxyExplorerMain extends InputAdapter implements ApplicationListe
 		shotZ = 1;
 
 		stage = new Stage();
+
 		font = new BitmapFont();
 		label = new Label(" ", new Label.LabelStyle(font, Color.WHITE));
 		stage.addActor(label);
+		
 		stringBuilder = new StringBuilder();
+		fireButtonactor = new MyActor("Fire", fireButton, fireButton.getWidth()*3, 0);
+		fireButtonactor.setTouchable(Touchable.enabled);
+		spawnButtonactor = new MyActor("Spawn", spawnButton, fireButton.getWidth()*4, 0);
+		spawnButtonactor.setTouchable(Touchable.enabled);
+		shipUpButtonactor = new MyActor("shipUpButton", upButton, upButton.getWidth(), upButton.getHeight());
+		shipUpButtonactor.setTouchable(Touchable.enabled);
+		shipDownButtonactor = new MyActor("shipDownButton", downButton, downButton.getWidth(), 0);
+		shipDownButtonactor.setTouchable(Touchable.enabled);
+		shipLeftButtonactor = new MyActor("shipLeftButton", leftButton, 0, leftButton.getHeight()/2);
+		shipLeftButtonactor.setTouchable(Touchable.enabled);
+		shipRightButtonactor = new MyActor("shipRightButton", rightButton, rightButton.getWidth()*2, rightButton.getHeight()/2);
+		shipRightButtonactor.setTouchable(Touchable.enabled);
+
+		
+
+		stage.addActor(fireButtonactor);
+		stage.addActor(spawnButtonactor);
+		stage.addActor(shipUpButtonactor);
+		stage.addActor(shipDownButtonactor);
+		stage.addActor(shipLeftButtonactor);
+		stage.addActor(shipRightButtonactor);
+
+
+		//for (Actor i : stage.getActors()) scaleActorSmall(i);
 
 		modelBatch = new ModelBatch();
 		environment = new Environment();
 		environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.4f, 0.4f, 0.4f, 1f));
 		environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, -1f, -0.8f, -0.2f));
 
+		//cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		cam.position.set(0f, 7f, 10f);
 		cam.lookAt(0,0,0);
@@ -434,8 +504,13 @@ public class GalaxyExplorerMain extends InputAdapter implements ApplicationListe
 		cam.update();
 
 		camController = new CameraInputController(cam);
-		Gdx.input.setInputProcessor(new InputMultiplexer(this, camController));
+		inputMultiplexer = new InputMultiplexer(camController);
+		Gdx.input.setInputProcessor(inputMultiplexer);
+		inputMultiplexer.addProcessor(camController);
+		inputMultiplexer.addProcessor(stage);
 
+		//Gdx.input.setInputProcessor(new InputMultiplexer(this, camController));
+		//Gdx.input.setInputProcessor(stage);
 		selectionMaterial = new Material();
 		selectionMaterial.set(ColorAttribute.createDiffuse(Color.ORANGE));
 		originalMaterial = new Material();
@@ -512,8 +587,8 @@ public class GalaxyExplorerMain extends InputAdapter implements ApplicationListe
 				//space = new ModelInstance(instance.model);
 				instance.calculateBoundingBox(bounds);
 				spaceShape = new Sphere(bounds);
-				instance.shape = shipShape;
-
+				instance.shape = spaceShape;
+				environmentInstances.add(instance);
 				//continue;
 			}
 			else if (id.equals("ship")) {
@@ -537,20 +612,38 @@ public class GalaxyExplorerMain extends InputAdapter implements ApplicationListe
 				invaders.add(instance);
 
 			}
-			instances.add(instance);
+			//instances.add(instance);
 
 		}
 		constructors.put("shipObject", new GameObject.Constructor(model, "ship", new btBoxShape(new Vector3(2.5f, 0.5f, 2.5f)), 1f));
+		constructors.put("invader1", new GameObject.Constructor(model, "invader1", new btBoxShape(new Vector3(2.5f, 0.5f, 2.5f)), 1f));
+		constructors.put("spaceGlobe", new GameObject.Constructor(model, "spaceGlobe", new btBoxShape(new Vector3(0f, 0f, 0f)), 0f));
+
 		shipObject = constructors.get("shipObject").construct();
 		shipObject.calculateBoundingBox(bounds);
 		shipObject.shape = new Box(bounds);
 		shipObject.body.setCollisionFlags(shipObject.body.getCollisionFlags()
 				| btCollisionObject.CollisionFlags.CF_KINEMATIC_OBJECT);
+
+		invader1object = constructors.get("invader1").construct();
+		invader1object.calculateBoundingBox(bounds);
+		invader1object.shape = new Disc(bounds);
+		invader1object.body.setCollisionFlags(invader1object.body.getCollisionFlags()
+				| btCollisionObject.CollisionFlags.CF_KINEMATIC_OBJECT);
+
 		instances.add(shipObject);
+		instances.add(invader1object);
+		
 		shipObject.transform.setToTranslation(0f, 0f, 4f);
 		shipObject.body.proceedToTransform(shipObject.transform);
 		shipObject.center.set(shipObject.body.getCenterOfMassPosition());
 		dynamicsWorld.addRigidBody(shipObject.body);
+
+		invader1object.transform.setToTranslation(0f, 0f, 8f);
+		invader1object.body.proceedToTransform(invader1object.transform);
+		invader1object.center.set(invader1object.body.getCenterOfMassPosition());
+		dynamicsWorld.addRigidBody(invader1object.body);
+		
 		loading = false;
 	}
 
@@ -579,10 +672,22 @@ public class GalaxyExplorerMain extends InputAdapter implements ApplicationListe
 		float W = Gdx.graphics.getWidth();
 		float H = Gdx.graphics.getHeight();
 		sprite.setSize(W/12, H/8);
+
+	}
+	public void scaleActor(Actor sprite){
+		float W = Gdx.graphics.getWidth();
+		float H = Gdx.graphics.getHeight();
+		sprite.setSize(W/12, H/8);
+	}
+	public void scaleActorSmall(Actor sprite){
+		float W = Gdx.graphics.getWidth();
+		float H = Gdx.graphics.getHeight();
+		sprite.setSize(W / 36, H / 24);
 	}
 
+
 	public void spawn () {
-		GameObject obj = constructors.values[1 + MathUtils.random(constructors.size - 2)].construct();
+		GameObject obj = constructors.values[1 + MathUtils.random(constructors.size - 3)].construct();
 		obj.transform.setFromEulerAngles(MathUtils.random(360f), MathUtils.random(360f), MathUtils.random(360f));
 		obj.transform.trn(MathUtils.random(-2.5f, 2.5f), 9f, MathUtils.random(-2.5f, 2.5f));
 		obj.body.proceedToTransform(obj.transform);
@@ -592,7 +697,6 @@ public class GalaxyExplorerMain extends InputAdapter implements ApplicationListe
 		obj.shape = new Box(bounds);
 		instances.add(obj);
 		dynamicsWorld.addRigidBody(obj.body);
-		angelicSound.play();
 		obj.body.setContactCallbackFlag(OBJECT_FLAG);
 		obj.body.setContactCallbackFilter(GROUND_FLAG);
 	}
@@ -624,14 +728,17 @@ public class GalaxyExplorerMain extends InputAdapter implements ApplicationListe
 		visibleCount = 0;
 		//if (space != null) modelBatch.render(space);
 
-
-
 		if (!loading) {
-			for (final GameObject instance : instances) {
-				if (instances.equals("space")){
-					modelBatch.render(instance);
+
+
+			for (final GameObject instance : environmentInstances){
+				if (instance.isVisible(cam)){
+					modelBatch.render(instance, environment);
+					visibleCount++;
 				}
-				else if (instance.isVisible(cam)) {
+			}
+			for (final GameObject instance : instances) {
+				if (instance.isVisible(cam)) {
 					modelBatch.render(instance, environment);
 					visibleCount++;
 				}
@@ -660,6 +767,23 @@ public class GalaxyExplorerMain extends InputAdapter implements ApplicationListe
 			if (Gdx.input.isKeyPressed(Input.Keys.UP)){
 				shipObject.transform.trn(upVector);
 			}
+			if (touchedActor == 1) {
+				if (touchedName.equals("Fire")) {
+					fire();
+				}
+				if (touchedName.equals("Spawn")) {
+					spawn();
+				}
+				if (touchedName.equals("shipRightButton"))
+					shipObject.transform.translate(rightVector);
+				if (touchedName.equals("shipLeftButton"))
+					shipObject.transform.translate(leftVector);
+				if (touchedName.equals("shipUpButton"))
+					shipObject.transform.translate(upVector);
+				if (touchedName.equals("shipDownButton"))
+					shipObject.transform.translate(downVector);
+
+			}
 			if (Gdx.input.isKeyPressed(Input.Keys.DOWN)){
 				shipObject.transform.trn(downVector);
 
@@ -680,13 +804,13 @@ public class GalaxyExplorerMain extends InputAdapter implements ApplicationListe
 			}
 			if (Gdx.input.isKeyJustPressed(Input.Keys.COMMA)){
 				shipObject.transform.rotate(rotateVector, 45f);
-				cam.rotateAround(shipObject.center, rotateVector, 45f);
+				//cam.rotateAround(shipObject.center, rotateVector, 45f);
 				cam.update();
 
 			}
 			if (Gdx.input.isKeyPressed(Input.Keys.PERIOD)){
 				shipObject.transform.rotate(rotateVector, -45f);
-				cam.position.rotate(rotateVector, -45f);
+				//cam.position.rotate(rotateVector, -45f);
 
 			}
 			if (Gdx.input.isKeyPressed(Input.Keys.NUMPAD_8)) {
@@ -722,7 +846,7 @@ public class GalaxyExplorerMain extends InputAdapter implements ApplicationListe
 			}
 			shipObject.body.proceedToTransform(shipObject.transform);
 			shipObject.center.set(shipObject.body.getCenterOfMassPosition());
-			cam.position.set(shipObject.body.getCenterOfMassPosition());
+			cam.position.set(new Vector3(shipObject.center.x, shipObject.center.y, shipObject.center.z));
 			cam.position.sub(0f, -5f, 5f);
 			//cam.position.add(0f, 5f, 0f);
 			cam.lookAt(shipObject.center);
@@ -734,22 +858,17 @@ public class GalaxyExplorerMain extends InputAdapter implements ApplicationListe
 			stringBuilder.append(" FPS: ").append(Gdx.graphics.getFramesPerSecond());
 			stringBuilder.append(" Visible: ").append(visibleCount);
 			stringBuilder.append(" Selected: ").append(selected);
-			stringBuilder.append(" Size of instances: ").append(instances.size);
-			stringBuilder.append(" Shot X: ").append(shotX);
-			stringBuilder.append(" Shot Y: ").append(shotY);
-			stringBuilder.append(" Shot Z: ").append(shotZ);
 			stringBuilder.append("\n");
-			stringBuilder.append(" ShipObject transform: ").append(shipObject.transform.toString());
+			stringBuilder.append(" Size of instances: ").append(instances.size);
 			label.setText(stringBuilder);
 			label.setSize(screenW / 3, screenH / 4);
+			label.setPosition(screenW-label.getWidth(), 0);
 			//label.setSize(screenW, screenH/4);
 		}
 
 		modelBatch.end();
 
 		spriteBatch.begin();
-		fireSprite.setPosition(0, screenH - fireSprite.getHeight());
-		spawnSprite.setPosition(0, screenH-fireSprite.getHeight()-spawnSprite.getHeight());
 		xUp.setPosition(screenW-xUp.getWidth(), screenH-xUp.getHeight());
 		xDown.setPosition(screenW-xUp.getWidth()*2, screenH-xUp.getHeight());
 		yUp.setPosition(screenW-xUp.getWidth(), screenH-xUp.getHeight()*2);
@@ -757,61 +876,40 @@ public class GalaxyExplorerMain extends InputAdapter implements ApplicationListe
 		zUp.setPosition(screenW-xUp.getWidth(), screenH-xUp.getHeight()*3);
 		zDown.setPosition(screenW-xUp.getWidth()*2, screenH-xUp.getHeight()*3);
 
-		for (int i = 0; i < spriteArray.size; i ++){
+		//sUp.setPosition(sDown.getWidth(), sUp.getHeight());
+		sUp.setPosition(sUp.getWidth(), sUp.getHeight());
+		sDown.setPosition(sDown.getWidth(), 0);
+		sLeft.setPosition(0, sLeft.getHeight()/2);
+		sRight.setPosition(sRight.getWidth()*2, sRight.getHeight()/2);
+		sAscent.setPosition(sAscent.getWidth()*2, sAscent.getHeight());
+		sDescent.setPosition(sDescent.getWidth()*2, 0f);
+
+		/*for (int i = 0; i < spriteArray.size; i ++){
 			Sprite sprite = spriteArray.get(i);
+			sprite.setBounds(sprite.getX(), sprite.getY(), sprite.getWidth(), sprite.getHeight());
 			sprite.draw(spriteBatch);
-		}
+		}*/
+		/*for (Sprite i : spriteArray) {
+			i.setBounds(i.getX(), i.getY(), i.getWidth(), i.getHeight());
+			i.draw(spriteBatch);
+			spriteBatch.draw(i, i.getX(), i.getY(), i.getOriginX(), i.getOriginY(),
+					i.getWidth(), i.getHeight(), i.getScaleX(), i.getScaleY(), i.getRotation());
+
+		}*/
 		spriteBatch.end();
 		stage.draw();
 
 
+
 	}
+
+
+	Vector3 touchPoint = new Vector3();
 
 	@Override
 	public boolean touchDown(int screenX, int screenY, int pointer, int button){
 		shotX = screenX;
 		shotY = screenY;
-		//fire button
-		if (screenX > 0 && screenX < fireSprite.getWidth() && screenY > 0 &&
-				screenY < fireSprite.getHeight()){
-			fire();
-		}
-		//spawn button
-		if (screenX > 0 && screenX < fireSprite.getWidth() && screenY > fireSprite.getHeight() &&
-				screenY < fireSprite.getHeight() + spawnSprite.getHeight()){
-			spawn();
-		}
-
-		if (screenX > screenW - xUp.getWidth() && screenY < xUp.getHeight()){
-			shotX += 1;
-		}
-
-		if (screenX > screenW - xUp.getWidth()*2 && screenX < screenW - xUp.getWidth()
-				&& screenY < xUp.getHeight()){
-			shotX -= 1;
-		}
-		if (screenX > screenW - xUp.getWidth() &&
-				screenY < xUp.getHeight()*2 &&
-				screenY > xUp.getHeight()){
-			shotY += 1;
-		}
-
-		if (screenX > screenW - xUp.getWidth()*2 && screenX < screenW - xUp.getWidth()
-				&& screenY < xUp.getHeight()*2 &&
-				screenY > xUp.getHeight()){
-			shotY -= 1;
-		}
-
-		if(screenX > screenW - xUp.getWidth() && screenY < xUp.getHeight()*3 &&
-				screenY > xUp.getHeight()*2){
-			shotZ += 1;
-		}
-
-		if (screenX > screenW - xUp.getWidth()*2 && screenX < screenW - xUp.getWidth()
-				&& screenY < xUp.getHeight()*3 &&
-				screenY > xUp.getHeight()*2){
-			shotZ -= 1;
-		}
 
 		selecting = getObject(screenX, screenY);
 		return selecting >= 0;
@@ -832,7 +930,6 @@ public class GalaxyExplorerMain extends InputAdapter implements ApplicationListe
 				instances.get(selected).body.setCenterOfMassTransform(instances.get(selected).transform);
 
 			}
-
 		}
 		return true;
 	}
@@ -911,4 +1008,65 @@ public class GalaxyExplorerMain extends InputAdapter implements ApplicationListe
 	@Override
 	public void resume() {
 	}
+
+	public boolean getClick(Actor actor){
+		int x1 = Gdx.input.getX();
+		int y1 = Gdx.input.getY();
+		Vector2 input = new Vector2();
+		actor.stageToLocalCoordinates(input);
+
+		if(input.x > actor.getX() && input.x < actor.getX() + actor.getWidth()
+				&& input.y > actor.getY() && input.y < actor.getY() + actor.getHeight()){
+			return true;
+		}
+		return false;
+	}
+
+	public class MyActor extends Actor{
+		public boolean clicked;
+		float actorX, actorY;
+		String identifier;
+		Texture texture;
+		Rectangle bounds = new Rectangle();
+
+		public MyActor(final String identifier, Texture texture, float actorX, float actorY){
+			final Sprite sprite;
+			setWidth(texture.getWidth());
+			setHeight(texture.getHeight());
+			setBounds(actorX, actorY, texture.getWidth(), texture.getHeight());
+			this.actorX = actorX;
+			this.actorY = actorY;
+			this.texture = texture;
+			this.identifier = identifier;
+			sprite = new Sprite(texture);
+			addListener(new InputListener() {
+				public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
+					touchedActor = 1;
+					touchedName = identifier;
+					return true;  // must return true for touchUp event to occur
+				}
+
+				public void touchUp (InputEvent event, float x, float y, int pointer, int button) {
+					touchedActor = 0;
+				}
+
+				public void draw(SpriteBatch batch, float parentAlpha){
+					batch.draw(sprite, getX(), getY(), getOriginX(), getOriginY(), getWidth(), getHeight(), getScaleX(), getScaleY(), getRotation());
+				}
+			});
+
+
+		}
+
+		@Override
+		public void draw(Batch batch, float alpha){
+			batch.draw(texture, actorX, actorY);
+		}
+
+		@Override
+		public void act(float delta){
+
+		}
+	}
 }
+
