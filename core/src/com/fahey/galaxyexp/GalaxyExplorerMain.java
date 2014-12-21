@@ -38,7 +38,22 @@ public class GalaxyExplorerMain extends InputAdapter implements ApplicationListe
 	public int activeWeapon;
 	InputMultiplexer inputMultiplexer;
 
+	public boolean fullScreen;
 	public Vector2 touchPos;
+	public ArrayMap<String, GameObject> randGroundArray;
+
+	public Vector3 camPosition;
+	public Vector3 camLookAt;
+	public Vector3 camRotate;
+	public Vector3 camZoom;
+
+	public float camPanX, camPanY, camPanZ, camDegrees;
+	public float camLookAtX, camLookAtY, camLookAtZ;
+
+	public float camRot, camRotX, camRotY, camRotZ;
+
+	public ArrayMap<String, GameObject> camLookatMap;
+	public Model invaderModelScene;
 
 	public interface Shape{
 		public abstract boolean isVisible(Matrix4 transform, Camera cam);
@@ -329,6 +344,7 @@ public class GalaxyExplorerMain extends InputAdapter implements ApplicationListe
 
 	protected Stage stage;
 	protected Label label;
+	protected Label label2;
 	protected BitmapFont font;
 	protected StringBuilder stringBuilder;
 
@@ -355,7 +371,7 @@ public class GalaxyExplorerMain extends InputAdapter implements ApplicationListe
 	Array<Sound> soundArray = new Array<Sound>();
 
 	Sprite xUp, xDown, yUp, yDown, zUp, zDown;
-	Sprite sUp, sDown, sLeft, sRight, sAscent, sDescent;
+	Sprite sUp, sDown, sLeft, sRight, sAscent, sDescent, sFire, sSpawn;
 	Texture fireButton;
 	Texture spawnButton, xUpButton, xDownButton, yUpButton, yDownButton, zUpButton,zDownButton;
 	Texture upButton, downButton, leftButton, rightButton, ascentButton, descentButton;
@@ -375,10 +391,48 @@ public class GalaxyExplorerMain extends InputAdapter implements ApplicationListe
 
 	float touchedActor = 0;
 	String touchedName = "";
+	int currentCamTarget;
+
+	float camZoomX, camZoomY, camZoomZ;
+	public Vector3 camrotateVector;
+	public Vector3 target;
+	public Vector3 camPositionVec;
 
 	@Override
 	public void create() {
 		Bullet.init();
+
+		currentCamTarget = 0;
+		
+		camPositionVec = new Vector3(0,0,0);
+		
+		camZoomX = 5;
+		camZoomY = 5;
+		camZoomZ = 3;
+
+		camLookAtX = -6;
+		camLookAtY = 5;
+		camLookAtZ = -18;
+
+		camPanX = 0;
+		camPanY = 0;
+		camPanZ = 0;
+		camDegrees = 0;
+		
+		camRot = 45f;
+		camRotX = 0;
+		camRotY = 0;
+		camRotZ = 0;
+
+		target = new Vector3();
+
+
+
+		fullScreen = false;
+		camPosition = new Vector3();
+		camRotate = new Vector3(3f, 0f, 0f);
+		camZoom = new Vector3(5f, 5f, 0f);
+		camLookatMap = new ArrayMap<String, GameObject>();
 
 		touchPos = new Vector2();
 		activeWeapon = 1;
@@ -412,6 +466,7 @@ public class GalaxyExplorerMain extends InputAdapter implements ApplicationListe
 		dropDownVector = new Vector3(0f, -1f, 0f);
 		raiseUpVector = new Vector3(0f, 1f, 0f);
 		rotateVector = new Vector3(0f, 1f, 0f);
+		camrotateVector = new Vector3(1f, 0f, 0f);
 
 		xUp = new Sprite(xUpButton);
 		xDown = new Sprite(xDownButton);
@@ -427,6 +482,11 @@ public class GalaxyExplorerMain extends InputAdapter implements ApplicationListe
 		sAscent = new Sprite(ascentButton);
 		sDescent = new Sprite(descentButton);
 
+		sFire = new Sprite(fireButton);
+		sSpawn = new Sprite(spawnButton);
+
+		spriteArray.add(sFire);
+		spriteArray.add(sSpawn);
 		spriteArray.add(xUp);
 		spriteArray.add(xDown);
 		spriteArray.add(yDown);
@@ -446,13 +506,14 @@ public class GalaxyExplorerMain extends InputAdapter implements ApplicationListe
 		spriteArray.add(sAscent);
 
 		for (Sprite i : spriteArray) {
-
 			scaleSprite(i);
-
 		}
 
-		screenH = Gdx.graphics.getHeight();
-		screenW = Gdx.graphics.getWidth();
+		//screenH = Gdx.graphics.getHeight();
+		//screenW = Gdx.graphics.getWidth();
+
+		screenH = 600f;
+		screenW = 800f;
 
 		shotX = 5;
 		shotY= 5;
@@ -462,30 +523,21 @@ public class GalaxyExplorerMain extends InputAdapter implements ApplicationListe
 
 		font = new BitmapFont();
 		label = new Label(" ", new Label.LabelStyle(font, Color.WHITE));
-		stage.addActor(label);
-		
+		label2 = new Label(" ", new Label.LabelStyle(font, Color.WHITE));
+
 		stringBuilder = new StringBuilder();
-		fireButtonactor = new MyActor("Fire", fireButton, fireButton.getWidth()*3, 0);
+		fireButtonactor = new MyActor("Fire", sFire, fireButton.getWidth()*3, 0);
 		fireButtonactor.setTouchable(Touchable.enabled);
-		spawnButtonactor = new MyActor("Spawn", spawnButton, fireButton.getWidth()*4, 0);
+		spawnButtonactor = new MyActor("Spawn", sSpawn, fireButton.getWidth()*4, 0);
 		spawnButtonactor.setTouchable(Touchable.enabled);
-		shipUpButtonactor = new MyActor("shipUpButton", upButton, upButton.getWidth(), upButton.getHeight());
+		shipUpButtonactor = new MyActor("shipUpButton", sUp, upButton.getWidth(), upButton.getHeight());
 		shipUpButtonactor.setTouchable(Touchable.enabled);
-		shipDownButtonactor = new MyActor("shipDownButton", downButton, downButton.getWidth(), 0);
+		shipDownButtonactor = new MyActor("shipDownButton", sDown, downButton.getWidth(), 0);
 		shipDownButtonactor.setTouchable(Touchable.enabled);
-		shipLeftButtonactor = new MyActor("shipLeftButton", leftButton, 0, leftButton.getHeight()/2);
+		shipLeftButtonactor = new MyActor("shipLeftButton", sLeft, 0, leftButton.getHeight()/2);
 		shipLeftButtonactor.setTouchable(Touchable.enabled);
-		shipRightButtonactor = new MyActor("shipRightButton", rightButton, rightButton.getWidth()*2, rightButton.getHeight()/2);
+		shipRightButtonactor = new MyActor("shipRightButton", sRight, rightButton.getWidth()*2, rightButton.getHeight()/2);
 		shipRightButtonactor.setTouchable(Touchable.enabled);
-
-		
-
-		stage.addActor(fireButtonactor);
-		stage.addActor(spawnButtonactor);
-		stage.addActor(shipUpButtonactor);
-		stage.addActor(shipDownButtonactor);
-		stage.addActor(shipLeftButtonactor);
-		stage.addActor(shipRightButtonactor);
 
 
 		//for (Actor i : stage.getActors()) scaleActorSmall(i);
@@ -519,7 +571,7 @@ public class GalaxyExplorerMain extends InputAdapter implements ApplicationListe
 		mb.begin();
 		mb.node().id = "ground";
 		mb.part("ground", GL20.GL_TRIANGLES, VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal, new Material(ColorAttribute.createDiffuse(Color.RED)))
-				.box(5f, 1f, 5f);
+				.box(15f, 1f, 15f);
 		mb.node().id = "sphere";
 		mb.part("sphere", GL20.GL_TRIANGLES, VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal, new Material(ColorAttribute.createDiffuse(Color.GREEN)))
 				.sphere(1f, 1f, 1f, 10, 10);
@@ -569,8 +621,12 @@ public class GalaxyExplorerMain extends InputAdapter implements ApplicationListe
 		cannonSound = assets.get("cannon_fire.mp3", Sound.class);
 		clinkSound = assets.get("small_object_strike_metal.ogg", Sound.class);
 		//constructors.put("shipObject", new GameObject.Constructor(model, "ship", new btBoxShape(new Vector3(2.5f, 0.5f, 2.5f)), 0f));
-
+		randGroundArray = new ArrayMap<String, GameObject>();
 		GameObject object = constructors.get("ground").construct();
+		for (int i = 0; i < 50; i++){
+			GameObject obj = constructors.get("ground").construct();
+			randGroundArray.put("obj"+i, obj);
+		}
 		object.calculateBoundingBox(bounds);
 		object.shape = new Box(bounds);
 		object.body.setCollisionFlags(object.body.getCollisionFlags()
@@ -579,10 +635,10 @@ public class GalaxyExplorerMain extends InputAdapter implements ApplicationListe
 
 		dynamicsWorld.addRigidBody(object.body);
 
-		Model model = assets.get("invaderscene.g3db", Model.class);
-		for (int i = 0; i < model.nodes.size; i++) {
-			String id = model.nodes.get(i).id;
-			GameObject instance = new GameObject(model, id, true);
+		invaderModelScene = assets.get("invaderscene.g3db", Model.class);
+		for (int i = 0; i < invaderModelScene.nodes.size; i++) {
+			String id = invaderModelScene.nodes.get(i).id;
+			GameObject instance = new GameObject(invaderModelScene, id, true);
 			if (id.equals("space")) {
 				//space = new ModelInstance(instance.model);
 				instance.calculateBoundingBox(bounds);
@@ -615,15 +671,19 @@ public class GalaxyExplorerMain extends InputAdapter implements ApplicationListe
 			//instances.add(instance);
 
 		}
-		constructors.put("shipObject", new GameObject.Constructor(model, "ship", new btBoxShape(new Vector3(2.5f, 0.5f, 2.5f)), 1f));
-		constructors.put("invader1", new GameObject.Constructor(model, "invader1", new btBoxShape(new Vector3(2.5f, 0.5f, 2.5f)), 1f));
-		constructors.put("spaceGlobe", new GameObject.Constructor(model, "spaceGlobe", new btBoxShape(new Vector3(0f, 0f, 0f)), 0f));
+		constructors.put("shipObject", new GameObject.Constructor(invaderModelScene, "ship", new btBoxShape(new Vector3(2.5f, 0.5f, 2.5f)), 1f));
+		constructors.put("invader1", new GameObject.Constructor(invaderModelScene, "invader1", new btBoxShape(new Vector3(2.5f, 0.5f, 2.5f)), 1f));
+		constructors.put("spaceGlobe", new GameObject.Constructor(invaderModelScene, "spaceGlobe", new btBoxShape(new Vector3(0f, 0f, 0f)), 0f));
 
 		shipObject = constructors.get("shipObject").construct();
 		shipObject.calculateBoundingBox(bounds);
 		shipObject.shape = new Box(bounds);
 		shipObject.body.setCollisionFlags(shipObject.body.getCollisionFlags()
 				| btCollisionObject.CollisionFlags.CF_KINEMATIC_OBJECT);
+		//| btCollisionObject.CollisionFlags.CF_CUSTOM_MATERIAL_CALLBACK);
+		shipObject.calculateBoundingBox(bounds);
+		shipObject.shape = new Box(bounds);
+		dynamicsWorld.addRigidBody(shipObject.body);
 
 		invader1object = constructors.get("invader1").construct();
 		invader1object.calculateBoundingBox(bounds);
@@ -633,28 +693,32 @@ public class GalaxyExplorerMain extends InputAdapter implements ApplicationListe
 
 		instances.add(shipObject);
 		instances.add(invader1object);
-		
+
+		camLookatMap.put("Ship", shipObject);
+		camLookatMap.put("Invader", invader1object);
+
 		shipObject.transform.setToTranslation(0f, 0f, 4f);
 		shipObject.body.proceedToTransform(shipObject.transform);
 		shipObject.center.set(shipObject.body.getCenterOfMassPosition());
-		dynamicsWorld.addRigidBody(shipObject.body);
+		//dynamicsWorld.addRigidBody(shipObject.body);
 
 		invader1object.transform.setToTranslation(0f, 0f, 8f);
 		invader1object.body.proceedToTransform(invader1object.transform);
 		invader1object.center.set(invader1object.body.getCenterOfMassPosition());
 		dynamicsWorld.addRigidBody(invader1object.body);
-		
+
 		loading = false;
 	}
 
 	public void fire(){
-		Ray ray = cam.getPickRay(shotX, shotY);
+		//Ray ray = cam.getPickRay(screenW/2, screenH/2);
+		Ray ray = cam.getPickRay(shipObject.center.x, shipObject.center.z);
 		GameObject obj = constructors.values[activeWeapon].construct();
 		//GameObject obj = constructors.values[1 + MathUtils.random(constructors.size - 2)].construct();
 		//obj.transform.setFromEulerAngles(MathUtils.random(360f), MathUtils.random(360f), MathUtils.random(360f));
 		//obj.transform.trn(MathUtils.random(-2.5f, 2.5f), 9f, MathUtils.random(-2.5f, 2.5f));
-		obj.transform.setFromEulerAngles(shipObject.center.x, shipObject.center.y, shipObject.center.z);
-		obj.transform.setToTranslation(shipObject.body.getCenterOfMassPosition().add(0f, 0f, 2f));
+		obj.transform.setFromEulerAngles(camLookatMap.getValueAt(currentCamTarget).center.x+2f, camLookatMap.getValueAt(currentCamTarget).center.y+2f, camLookatMap.getValueAt(currentCamTarget).center.z+1f);
+		obj.transform.setToTranslation(camLookatMap.getValueAt(currentCamTarget).body.getCenterOfMassPosition().add(0f, 0f, 2f));
 		obj.body.proceedToTransform(obj.transform);
 		obj.body.setUserValue(instances.size);
 		obj.body.setCollisionFlags(obj.body.getCollisionFlags() | btCollisionObject.CollisionFlags.CF_CUSTOM_MATERIAL_CALLBACK);
@@ -666,7 +730,8 @@ public class GalaxyExplorerMain extends InputAdapter implements ApplicationListe
 		obj.body.setContactCallbackFlag(OBJECT_FLAG);
 		obj.body.setContactCallbackFilter(GROUND_FLAG);
 		//obj.body.applyCentralImpulse(fireVector);
-		obj.body.applyCentralImpulse(ray.direction.scl(60f));
+		//obj.body.applyCentralImpulse(ray.direction.scl(30f));
+		obj.body.applyCentralImpulse(shipObject.center.add(10f, 0f, 1f));
 	}
 	public void scaleSprite(Sprite sprite){
 		float W = Gdx.graphics.getWidth();
@@ -674,14 +739,22 @@ public class GalaxyExplorerMain extends InputAdapter implements ApplicationListe
 		sprite.setSize(W/12, H/8);
 
 	}
+
 	public void scaleActor(Actor sprite){
 		float W = Gdx.graphics.getWidth();
 		float H = Gdx.graphics.getHeight();
 		sprite.setSize(W/12, H/8);
+		sprite.setWidth(sprite.getWidth());
+		sprite.setHeight(sprite.getHeight());
+		sprite.setBounds(sprite.getX(),sprite.getY(), sprite.getWidth(),sprite.getHeight());
+
 	}
+
 	public void scaleActorSmall(Actor sprite){
-		float W = Gdx.graphics.getWidth();
-		float H = Gdx.graphics.getHeight();
+		float W = screenW;
+		float H = screenH;
+		sprite.setWidth(sprite.getWidth());
+		sprite.setHeight(sprite.getHeight());
 		sprite.setSize(W / 36, H / 24);
 	}
 
@@ -730,10 +803,11 @@ public class GalaxyExplorerMain extends InputAdapter implements ApplicationListe
 
 		if (!loading) {
 
-
+			camController.forwardButton = Input.Keys.K;
 			for (final GameObject instance : environmentInstances){
 				if (instance.isVisible(cam)){
 					modelBatch.render(instance, environment);
+
 					visibleCount++;
 				}
 			}
@@ -744,29 +818,30 @@ public class GalaxyExplorerMain extends InputAdapter implements ApplicationListe
 				}
 			}
 
+			if (Gdx.input.isKeyPressed(Input.Keys.ALT_LEFT)
+					&& Gdx.input.isKeyJustPressed(Input.Keys.ENTER)) {
+				if (!fullScreen) {
+					if (Gdx.graphics.supportsDisplayModeChange()) {
+						Graphics.DisplayMode displayMode = Gdx.graphics.getDesktopDisplayMode();
+						Gdx.graphics.setDisplayMode(displayMode.width, displayMode.height, true);
+						fullScreen = true;
+					} else {
+						Gdx.graphics.setDisplayMode(1080, 720, false);
+					}
+				}
+			}
+
 			if (Gdx.input.isKeyJustPressed(Input.Keys.EQUALS)){
-				if (activeWeapon < constructors.size) {
+				if (activeWeapon < constructors.size-2) {
 					activeWeapon += 1;
 				} else {
 					activeWeapon = 0;
 				}
 			}
-
-			if (Gdx.input.isKeyJustPressed(Input.Keys.MINUS)){
-				if (activeWeapon > 0){
-					activeWeapon -= 1;
-				} else {
-					activeWeapon = constructors.size;
-				}
-			}
-
-			if (Gdx.input.isKeyPressed(Input.Keys.H)){
-				shipObject.body.applyForce(new Vector3(0f,1f,0f), shipObject.body.getCenterOfMassPosition());
-			}
+			
+			if (Gdx.input.isKeyJustPressed(Input.Keys.SHIFT_LEFT)) spawn();
 			if (Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT)) fire();
-			if (Gdx.input.isKeyPressed(Input.Keys.UP)){
-				shipObject.transform.trn(upVector);
-			}
+
 			if (touchedActor == 1) {
 				if (touchedName.equals("Fire")) {
 					fire();
@@ -784,73 +859,95 @@ public class GalaxyExplorerMain extends InputAdapter implements ApplicationListe
 					shipObject.transform.translate(downVector);
 
 			}
-			if (Gdx.input.isKeyPressed(Input.Keys.DOWN)){
-				shipObject.transform.trn(downVector);
+			if (Gdx.input.isKeyPressed(Input.Keys.UP)){
+				moveGameObject(camLookatMap.getValueAt(currentCamTarget), upVector);
 
+			}
+			if (Gdx.input.isKeyPressed(Input.Keys.DOWN)){
+				moveGameObject(camLookatMap.getValueAt(currentCamTarget), downVector);
 			}
 			if (Gdx.input.isKeyPressed(Input.Keys.LEFT)){
-				shipObject.transform.translate(leftVector);
-
+				moveGameObject(camLookatMap.getValueAt(currentCamTarget), leftVector);
 			}
 			if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)){
-				shipObject.transform.translate(rightVector);
+				moveGameObject(camLookatMap.getValueAt(currentCamTarget), rightVector);
 
 			}
+
 			if (Gdx.input.isKeyPressed(Input.Keys.X)) {
-				shipObject.transform.translate(dropDownVector);
+				camLookatMap.getValueAt(currentCamTarget).transform.translate(dropDownVector);
 			}
 			if (Gdx.input.isKeyPressed(Input.Keys.Z)) {
-				shipObject.transform.translate(raiseUpVector);
+				camLookatMap.getValueAt(currentCamTarget).transform.translate(raiseUpVector);
+				//camLookatMap.getValueAt(currentCamTarget).body.proceedToTransform(camLookatMap.getValueAt(currentCamTarget).transform);
+				//cam.rotateAround(camLookatMap.getValueAt(currentCamTarget).center, rotateVector, 45f);
+				//cam.update();
 			}
-			if (Gdx.input.isKeyJustPressed(Input.Keys.COMMA)){
-				shipObject.transform.rotate(rotateVector, 45f);
-				//cam.rotateAround(shipObject.center, rotateVector, 45f);
+			/*if (Gdx.input.isKeyPressed(Input.Keys.COMMA)){
+				camLookatMap.getValueAt(currentCamTarget).transform.rotate(rotateVector, 5f);
+				cam.rotate(camrotateVector, 5f);
+				//cam.rotateAround(camLookatMap.getValueAt(currentCamTarget).center, rotateVector, 45f);
 				cam.update();
 
-			}
-			if (Gdx.input.isKeyPressed(Input.Keys.PERIOD)){
-				shipObject.transform.rotate(rotateVector, -45f);
-				//cam.position.rotate(rotateVector, -45f);
+			}*/
 
-			}
-			if (Gdx.input.isKeyPressed(Input.Keys.NUMPAD_8)) {
-				if (shotZ < 50){
-					shotZ += 1;
-				};
-			}
-			if (Gdx.input.isKeyPressed(Input.Keys.NUMPAD_2)) {
-				if (shotZ > -50){
-					shotZ -= 1;
-				};
+
+			if (Gdx.input.isKeyJustPressed(Input.Keys.TAB)){
+				currentCamTarget = currentCamTarget < camLookatMap.size - 1 ? 1 : 0;
+				/*if (currentCamTarget < camLookatMap.size-1){
+					currentCamTarget += 1;
+				} else {
+					currentCamTarget = 0;
+				}*/
 			}
 
-			if (Gdx.input.isKeyPressed(Input.Keys.NUMPAD_4)) {
-				if (shotX < 50) {
-					shotX += 1;
-				}
-			}
-			if (Gdx.input.isKeyPressed(Input.Keys.NUMPAD_6)) {
-				if (shotX > -50){
-					shotX -= 1;
-				};
-			}
-			if (Gdx.input.isKeyPressed(Input.Keys.NUMPAD_7)) {
-				if (shotY < 50) {
-					shotY += 1;
-				}
-			}
-			if (Gdx.input.isKeyPressed(Input.Keys.NUMPAD_9)) {
-				if (shotY > -50){
-					shotY -= 1;
-				};
-			}
-			shipObject.body.proceedToTransform(shipObject.transform);
-			shipObject.center.set(shipObject.body.getCenterOfMassPosition());
-			cam.position.set(new Vector3(shipObject.center.x, shipObject.center.y, shipObject.center.z));
-			cam.position.sub(0f, -5f, 5f);
+			/*if (Gdx.input.isKeyPressed(Input.Keys.LEFT_BRACKET)) {
+				camZoomX -= 1;
+				camZoomY -= 1;
+				camZoomZ -= 1;
+			}*/
+
+			if (Gdx.input.isKeyPressed(Input.Keys.NUMPAD_6)) camLookAtX += 1;
+			if (Gdx.input.isKeyPressed(Input.Keys.NUMPAD_4)) camLookAtX -= 1;
+			if (Gdx.input.isKeyPressed(Input.Keys.NUMPAD_8)) camLookAtY += 1;
+			if (Gdx.input.isKeyPressed(Input.Keys.NUMPAD_2)) camLookAtY -= 1;
+			if (Gdx.input.isKeyPressed(Input.Keys.NUMPAD_1)) camLookAtZ -= 1;
+			if (Gdx.input.isKeyPressed(Input.Keys.NUMPAD_3)) camLookAtZ += 1;
+
+			//if (Gdx.input.isKeyPressed(Input.Keys.NUMPAD_7)) camPanX -= 1;
+			//if (Gdx.input.isKeyPressed(Input.Keys.NUMPAD_9)) camPanX += 1;
+			if (Gdx.input.isKeyPressed(Input.Keys.MINUS)) camZoomY -= 1;
+			if (Gdx.input.isKeyPressed(Input.Keys.NUM_0)) camZoomY += 1;
+
+			if (Gdx.input.isKeyPressed(Input.Keys.NUMPAD_5)) camDegrees = camDegrees < 360 ? camDegrees += 1 : 0;
+
+
+			if (Gdx.input.isKeyPressed(Input.Keys.T)) camRotX -= 1;
+			if (Gdx.input.isKeyPressed(Input.Keys.G)) camRotY -= 1;
+			if (Gdx.input.isKeyPressed(Input.Keys.B)) camRotZ -= 1;
+			if (Gdx.input.isKeyPressed(Input.Keys.Y)) camRotX += 1;
+			if (Gdx.input.isKeyPressed(Input.Keys.H)) camRotY += 1;
+			if (Gdx.input.isKeyPressed(Input.Keys.N)) camRotZ += 1;
+			if (Gdx.input.isKeyPressed(Input.Keys.R)) camRot += 1;
+			if (Gdx.input.isKeyPressed(Input.Keys.F)) camRot -= 1;
+
+			camLookatMap.getValueAt(currentCamTarget).body.proceedToTransform(camLookatMap.getValueAt(currentCamTarget).transform);
+			camLookatMap.getValueAt(currentCamTarget).center.set(camLookatMap.getValueAt(currentCamTarget).body.getCenterOfMassPosition());
+			//Vector3 lookatVal = camPositionVec.add(camLookAtX, camLookAtY, camLookAtZ);
+			Vector3 lookatVal = camLookatMap.getValueAt(currentCamTarget).center;
+			Vector3 zoomValue = new Vector3(camZoomX, camZoomY, camZoomZ);
+			camPositionVec.set(lookatVal.add(zoomValue));
+			//cam.position.set(new Vector3(shipObject.center.x, shipObject.center.y, shipObject.center.z));
+			//cam.position.sub(0f, -5f, 5f);.
 			//cam.position.add(0f, 5f, 0f);
-			cam.lookAt(shipObject.center);
 			//cam.project(shipObject.center);
+			cam.position.set(camPositionVec);
+			cam.position.rotate(camRot, camRotX, camRotY, camRotZ);
+			//cam.rotateAround(lookatVal, lookatVal.add(lookatVal), 180f);
+			//cam.position.rotate(camDegrees, camPanX, camPanY, camPanZ);
+			cam.lookAt(lookatVal);
+			//cam.update();
+			//cam.position.add(camZoomX, camZoomY, camZoomZ);
 			cam.update();
 
 			stringBuilder.setLength(0);
@@ -860,22 +957,34 @@ public class GalaxyExplorerMain extends InputAdapter implements ApplicationListe
 			stringBuilder.append(" Selected: ").append(selected);
 			stringBuilder.append("\n");
 			stringBuilder.append(" Size of instances: ").append(instances.size);
+			stringBuilder.append(" camZoomX: ").append(camZoomX).append(" camZoomY: ").append(camZoomY).append(" camZoomZ:").append(camZoomZ);
+			stringBuilder.append('\n').append(" camLookAtX: ").append(camLookAtX).append(" camLookAtY: ").append(camLookAtY).append(" camLookAtZ: ").append(camLookAtZ);
+			stringBuilder.append('\n').append(" camRotX: ").append(camRotX).append(" camRotY: ").append(camRotY).append(" camRotZ: ").append(camRotZ).append(" camRot degs: ").append(camRot);
+
 			label.setText(stringBuilder);
 			label.setSize(screenW / 3, screenH / 4);
-			label.setPosition(screenW-label.getWidth(), 0);
+			label.setPosition(screenW-label.getWidth(), label.getHeight());
+
+			stringBuilder = new StringBuilder();
+			stringBuilder.append("Left Ctrl: Fire || Left Shift: Spawn blocks \n" )
+					.append("Tab: Switch Object Control \n Arrow Keys: Move along X, Y || X and Z : Up and Down \n")
+			.append("CamLookAt X up/down: 6/4 \n").append("CamLookAt Y: 8/2 \n CamLookAt Z: 3/1 \n" +
+							"camRot: R/F \n camRotX : Y/T \n camRotY: H/G \n camRotZ: N/B \n");
+					label2.setText(stringBuilder);
+			label2.setSize(screenW / 3, screenH / 4);
+			label2.setPosition(0, label.getHeight());
 			//label.setSize(screenW, screenH/4);
+
 		}
-
 		modelBatch.end();
-
 		spriteBatch.begin();
+
 		xUp.setPosition(screenW-xUp.getWidth(), screenH-xUp.getHeight());
 		xDown.setPosition(screenW-xUp.getWidth()*2, screenH-xUp.getHeight());
 		yUp.setPosition(screenW-xUp.getWidth(), screenH-xUp.getHeight()*2);
 		yDown.setPosition(screenW-xUp.getWidth()*2, screenH-xUp.getHeight()*2);
 		zUp.setPosition(screenW-xUp.getWidth(), screenH-xUp.getHeight()*3);
 		zDown.setPosition(screenW-xUp.getWidth()*2, screenH-xUp.getHeight()*3);
-
 		//sUp.setPosition(sDown.getWidth(), sUp.getHeight());
 		sUp.setPosition(sUp.getWidth(), sUp.getHeight());
 		sDown.setPosition(sDown.getWidth(), 0);
@@ -883,26 +992,24 @@ public class GalaxyExplorerMain extends InputAdapter implements ApplicationListe
 		sRight.setPosition(sRight.getWidth()*2, sRight.getHeight()/2);
 		sAscent.setPosition(sAscent.getWidth()*2, sAscent.getHeight());
 		sDescent.setPosition(sDescent.getWidth()*2, 0f);
-
-		/*for (int i = 0; i < spriteArray.size; i ++){
-			Sprite sprite = spriteArray.get(i);
-			sprite.setBounds(sprite.getX(), sprite.getY(), sprite.getWidth(), sprite.getHeight());
-			sprite.draw(spriteBatch);
-		}*/
-		/*for (Sprite i : spriteArray) {
-			i.setBounds(i.getX(), i.getY(), i.getWidth(), i.getHeight());
-			i.draw(spriteBatch);
-			spriteBatch.draw(i, i.getX(), i.getY(), i.getOriginX(), i.getOriginY(),
-					i.getWidth(), i.getHeight(), i.getScaleX(), i.getScaleY(), i.getRotation());
-
-		}*/
 		spriteBatch.end();
+
+		switch(Gdx.app.getType()) {
+			case Android:
+				stage.addActor(fireButtonactor);
+				stage.addActor(spawnButtonactor);
+				stage.addActor(shipUpButtonactor);
+				stage.addActor(shipDownButtonactor);
+				stage.addActor(shipLeftButtonactor);
+				stage.addActor(shipRightButtonactor);
+				// desktop specific code
+			case Desktop:
+				stage.addActor(label);
+				stage.addActor(label2);
+				/// HTML5 specific code
+		}
 		stage.draw();
-
-
-
 	}
-
 
 	Vector3 touchPoint = new Vector3();
 
@@ -910,7 +1017,7 @@ public class GalaxyExplorerMain extends InputAdapter implements ApplicationListe
 	public boolean touchDown(int screenX, int screenY, int pointer, int button){
 		shotX = screenX;
 		shotY = screenY;
-
+		target.set(screenX, screenY, 0);
 		selecting = getObject(screenX, screenY);
 		return selecting >= 0;
 	}
@@ -922,13 +1029,11 @@ public class GalaxyExplorerMain extends InputAdapter implements ApplicationListe
 		if (selected == selecting) {
 			Ray ray = cam.getPickRay(screenX, screenY);
 			final float distance = -ray.origin.y / ray.direction.y;
-
 			position.set(ray.direction).scl(distance).add(ray.origin);
 			instances.get(selected).transform.setTranslation(position);
 			if(instances.get(selected).body != null){
 				instances.get(selected).body.proceedToTransform(instances.get(selected).transform);
 				instances.get(selected).body.setCenterOfMassTransform(instances.get(selected).transform);
-
 			}
 		}
 		return true;
@@ -989,11 +1094,8 @@ public class GalaxyExplorerMain extends InputAdapter implements ApplicationListe
 		for(int i = 0;i<soundArray.size;i++){
 			soundArray.get(i).dispose();
 		}
-
 		spriteBatch.dispose();
 		fireButton.dispose();
-
-
 	}
 
 	@Override
@@ -1009,6 +1111,11 @@ public class GalaxyExplorerMain extends InputAdapter implements ApplicationListe
 	public void resume() {
 	}
 
+	public void moveGameObject (GameObject obj, Vector3 movVec){
+		obj.transform.translate(movVec);
+		obj.body.proceedToTransform(obj.transform);
+
+	}
 	public boolean getClick(Actor actor){
 		int x1 = Gdx.input.getX();
 		int y1 = Gdx.input.getY();
@@ -1021,24 +1128,24 @@ public class GalaxyExplorerMain extends InputAdapter implements ApplicationListe
 		}
 		return false;
 	}
-
 	public class MyActor extends Actor{
 		public boolean clicked;
 		float actorX, actorY;
 		String identifier;
 		Texture texture;
+		Sprite sprite;
 		Rectangle bounds = new Rectangle();
 
-		public MyActor(final String identifier, Texture texture, float actorX, float actorY){
-			final Sprite sprite;
-			setWidth(texture.getWidth());
-			setHeight(texture.getHeight());
-			setBounds(actorX, actorY, texture.getWidth(), texture.getHeight());
+		public MyActor(final String identifier, final Sprite sprite, float actorX, float actorY){
+			this.sprite = sprite;
+			this.texture = sprite.getTexture();
+			setWidth(sprite.getWidth());
+			setHeight(sprite.getHeight());
+			setBounds(actorX, actorY, sprite.getWidth(), sprite.getHeight());
 			this.actorX = actorX;
 			this.actorY = actorY;
 			this.texture = texture;
 			this.identifier = identifier;
-			sprite = new Sprite(texture);
 			addListener(new InputListener() {
 				public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
 					touchedActor = 1;
@@ -1054,8 +1161,6 @@ public class GalaxyExplorerMain extends InputAdapter implements ApplicationListe
 					batch.draw(sprite, getX(), getY(), getOriginX(), getOriginY(), getWidth(), getHeight(), getScaleX(), getScaleY(), getRotation());
 				}
 			});
-
-
 		}
 
 		@Override
@@ -1069,4 +1174,3 @@ public class GalaxyExplorerMain extends InputAdapter implements ApplicationListe
 		}
 	}
 }
-
