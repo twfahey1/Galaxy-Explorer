@@ -28,7 +28,6 @@ public class MyWorld {
     btCollisionConfiguration collisionConfig;
     btDispatcher dispatcher;
     btBroadphaseInterface broadphase;
-    MyContactListener contactListener;
     final static short GROUND_FLAG = 1;
     final static short OBJECT_FLAG = 2;
     final static short ALL_FLAG = 3;
@@ -37,19 +36,26 @@ public class MyWorld {
 
 
     public MyWorld(){
+
+
         collisionConfig = new btDefaultCollisionConfiguration();
         dispatcher = new btCollisionDispatcher(collisionConfig);
         broadphase = new btDbvtBroadphase();
         constraintSolver = new btSequentialImpulseConstraintSolver();
         dynamicsWorld = new btDiscreteDynamicsWorld(dispatcher, broadphase, constraintSolver, collisionConfig);
         dynamicsWorld.setGravity(new Vector3(0, -9f, 0));
-        contactListener = new MyContactListener();
+        //contactListener = new MyContactListener();
         environment = new Environment();
         environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.4f, 0.4f, 0.4f, 1f));
         environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, -1f, -0.8f, -0.2f));
         selectionMaterial = new Material();
         selectionMaterial.set(ColorAttribute.createDiffuse(Color.ORANGE));
         originalMaterial = new Material();
+
+    }
+
+    public void stepSim(float timestep){
+        dynamicsWorld.stepSimulation(timestep, 5, 1f/60f);
 
     }
 

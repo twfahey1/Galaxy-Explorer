@@ -36,7 +36,7 @@ public class MyStage {
         label = new Label(" ", new Label.LabelStyle(font, Color.WHITE));
         label2 = new Label(" ", new Label.LabelStyle(font, Color.WHITE));
 
-        fireButton = new Texture(Gdx.files.internal("fireButton.png"));
+        /*fireButton = new Texture(Gdx.files.internal("fireButton.png"));
 
         spawnButton = new Texture(Gdx.files.internal("spawnButton.png"));
 
@@ -104,7 +104,7 @@ public class MyStage {
         spriteArray.add(sLeft);
         spriteArray.add(sRight);
         spriteArray.add(sDescent);
-        spriteArray.add(sAscent);
+        spriteArray.add(sAscent);*/
     }
 
 

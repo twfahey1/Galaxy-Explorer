@@ -55,6 +55,7 @@ public class ShapeCreator {
     }
 
 
+    /*
     public void fire() {
         //Ray ray = cam.getPickRay(screenW/2, screenH/2);
         Ray ray = cam.getPickRay(shipObject.center.x, shipObject.center.z);
@@ -77,5 +78,5 @@ public class ShapeCreator {
         //obj.body.applyCentralImpulse(fireVector);
         //obj.body.applyCentralImpulse(ray.direction.scl(30f));
         obj.body.applyCentralImpulse(shipObject.center.add(10f, 0f, 1f));
-    }
+    }*/
 }

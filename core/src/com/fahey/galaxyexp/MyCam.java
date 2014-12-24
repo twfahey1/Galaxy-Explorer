@@ -76,6 +76,12 @@ public class MyCam {
 
     }
 
+    public void updateCam(){
+        camController.update();
+
+
+    }
+
 
 
 }

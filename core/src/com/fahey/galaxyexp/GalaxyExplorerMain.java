@@ -26,69 +26,66 @@ import com.badlogic.gdx.utils.*;
 import com.badlogic.gdx.utils.StringBuilder;
 
 public class GalaxyExplorerMain extends InputAdapter implements ApplicationListener {
-
 	MyAssetManager assetManager;
-	MyWorld world;
+	static MyWorld world;
 	MyCam cam;
+	public boolean loading;
 
 	@Override
 	public void create() {
 		Bullet.init();
-		assetManager = new MyAssetManager();
 		world = new MyWorld();
+		assetManager = new MyAssetManager();
 		cam = new MyCam();
 
-
+		loading = true;
 
 	}
-
-
 	@Override
 	public void render() {
-
+		final float delta = Math.min(1f / 30f, Gdx.graphics.getDeltaTime());
+		if (loading && assetManager.assets.update()) {
+			assetManager.doneLoading();
+		}
 		if (assetManager.loading = false){
+			world.stepSim(delta);
+			cam.updateCam();
+			Gdx.gl.glViewport(0,0,Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+			Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
+			assetManager.modelBatch.begin(cam.cam);
+			for(MyGameObjects.GameObject i : assetManager.environmentInstances){
+
+				if (i.isVisible(cam.cam)){
+					assetManager.modelBatch.render(i,world.environment);
+				}
+			}
 
 		}
-
-
-
 	}
-
-
 	@Override
 	public boolean touchDown(int screenX, int screenY, int pointer, int button) {
 		return false;
 	}
-
 	@Override
 	public boolean touchDragged(int screenX, int screenY, int pointer) {
-
 		return true;
 	}
-
 	@Override
 	public boolean touchUp(int screenX, int screenY, int pointer, int button) {
-
 		return false;
 	}
-
-
 	@Override
 	public void dispose() {
 
 	}
-
 	@Override
 	public void resize(int width, int height) {
 		//stage.getViewport().update(width, height, true);
 	}
-
 	@Override
 	public void pause() {
 	}
-
 	@Override
 	public void resume() {
 	}
-
 }

@@ -21,8 +21,6 @@ import com.badlogic.gdx.utils.Disposable;
 public class MyGameObjects {
     protected Array<MyGameObjects.GameObject> instances = new Array<MyGameObjects.GameObject>();
 
-
-
     public static class GameObject extends ModelInstance implements Disposable {
         public final btRigidBody body;
         public final MyMotionState motionState;
@@ -32,7 +30,6 @@ public class MyGameObjects {
         public final float radius;
         public MyShapes.Shape shape;
         public float mass;
-
 
         private final static BoundingBox bounds = new BoundingBox();
 
